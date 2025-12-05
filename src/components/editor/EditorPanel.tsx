@@ -9,6 +9,7 @@ import { EducationEditor } from './EducationEditor';
 import { SkillsEditor } from './SkillsEditor';
 import { ProjectsEditor } from './ProjectsEditor';
 import { ThemeEditor } from './ThemeEditor';
+import { SectionSorter } from './SectionSorter';
 import {
   User,
   Briefcase,
@@ -22,8 +23,6 @@ import {
   Sparkles,
 } from 'lucide-react';
 
-type TabId = 'personal' | 'experience' | 'education' | 'skills' | 'projects' | 'theme';
-
 interface Tab {
   id: TabId;
   label: string;
@@ -31,6 +30,8 @@ interface Tab {
   component: React.ComponentType;
   color: string;
 }
+
+type TabId = 'personal' | 'experience' | 'education' | 'skills' | 'projects' | 'theme' | 'layout';
 
 const tabs: Tab[] = [
   { id: 'personal', label: '基本信息', icon: User, component: PersonalEditor, color: 'blue' },
@@ -131,6 +132,11 @@ export function EditorPanel() {
             <ActiveComponent />
           </motion.div>
         </AnimatePresence>
+      </div>
+
+      {/* Section Sorter */}
+      <div className="p-4 border-t border-gray-100 dark:border-gray-700/50">
+        <SectionSorter />
       </div>
     </div>
   );

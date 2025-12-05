@@ -3,7 +3,7 @@
 import { forwardRef, useDeferredValue } from 'react';
 import { Resume } from '@/types/resume';
 import { motion } from 'framer-motion';
-import { Mail, Phone, MapPin, Globe } from 'lucide-react';
+
 
 interface ResumePreviewProps {
   resume: Resume;
@@ -72,34 +72,47 @@ export const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <div className={`p-6 ${theme.layout === 'double' ? 'flex gap-4' : ''}`}>
-          {theme.layout === 'double' ? (
-            <>
-              {/* Sidebar - 1/3 width */}
-              <div className="w-1/3 space-y-3 pr-3 border-r" style={{ borderColor: theme.primaryColor + '20' }}>
+        {theme.layout === 'double' ? (
+          <div className="p-6">
+            {/* Header - Personal Info spans full width */}
+            {visibleSections.find((s) => s.type === 'personal') && (
+              <div className="mb-4">{renderSection('personal')}</div>
+            )}
+            
+            {/* Two Column Layout */}
+            <div className="flex gap-5">
+              {/* Left Column - 35% */}
+              <div 
+                className="space-y-4 pr-4" 
+                style={{ 
+                  width: '35%', 
+                  borderRight: `1px solid ${theme.primaryColor}20`,
+                }}
+              >
                 {visibleSections
-                  .filter((s) => ['personal', 'skills', 'education'].includes(s.type))
+                  .filter((s) => ['skills', 'education'].includes(s.type))
                   .map((section) => (
                     <div key={section.id}>{renderSection(section.type)}</div>
                   ))}
               </div>
-              {/* Main Content - 2/3 width */}
-              <div className="w-2/3 space-y-3 pl-2">
+              
+              {/* Right Column - 65% */}
+              <div className="space-y-4 pl-1" style={{ width: '65%' }}>
                 {visibleSections
                   .filter((s) => ['experience', 'projects'].includes(s.type))
                   .map((section) => (
                     <div key={section.id}>{renderSection(section.type)}</div>
                   ))}
               </div>
-            </>
-          ) : (
-            <div className="space-y-3">
-              {visibleSections.map((section) => (
-                <div key={section.id}>{renderSection(section.type)}</div>
-              ))}
             </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className="p-6 space-y-3">
+            {visibleSections.map((section) => (
+              <div key={section.id}>{renderSection(section.type)}</div>
+            ))}
+          </div>
+        )}
       </motion.div>
     );
   }
@@ -114,11 +127,11 @@ function PersonalSection({ personal, theme, fontSize }: { personal: Resume['pers
   if (!personal.name && !personal.title) return null;
 
   const contacts = [
-    { icon: Mail, value: personal.email },
-    { icon: Phone, value: personal.phone },
-    { icon: MapPin, value: personal.location },
-    { icon: Globe, value: personal.website },
-  ].filter(c => c.value);
+    personal.email,
+    personal.phone,
+    personal.location,
+    personal.website,
+  ].filter(Boolean);
 
   return (
     <div className="pb-3 border-b" style={{ borderColor: theme.primaryColor + '30' }}>
@@ -149,14 +162,22 @@ function PersonalSection({ personal, theme, fontSize }: { personal: Resume['pers
             </p>
           )}
           {contacts.length > 0 && (
-            <div className={`flex flex-wrap gap-x-3 gap-y-1 ${personal.avatar ? '' : 'justify-center'}`} style={{ fontSize: fontSize.small }}>
-              {contacts.map(({ icon: Icon, value }, i) => (
-                <span key={i} className="flex items-center gap-1">
-                  <Icon className="w-3 h-3" style={{ color: theme.primaryColor }} />
+            <p 
+              style={{ 
+                fontSize: fontSize.small,
+                textAlign: personal.avatar ? 'left' : 'center',
+                margin: 0,
+              }}
+            >
+              {contacts.map((value, i) => (
+                <span key={i}>
                   {value}
+                  {i < contacts.length - 1 && (
+                    <span style={{ color: theme.secondaryColor, margin: '0 8px' }}>|</span>
+                  )}
                 </span>
               ))}
-            </div>
+            </p>
           )}
         </div>
       </div>
@@ -170,7 +191,7 @@ function PersonalSection({ personal, theme, fontSize }: { personal: Resume['pers
   );
 }
 
-// Experience Section - 紧凑版
+// Experience Section - 紧凑版（公司在上，职位在旁）
 function ExperienceSection({ experience, theme, fontSize }: { experience: Resume['experience']; theme: Resume['theme']; fontSize: FontSize }) {
   return (
     <div>
@@ -179,14 +200,20 @@ function ExperienceSection({ experience, theme, fontSize }: { experience: Resume
         {experience.map((exp) => (
           <div key={exp.id}>
             <div className="flex justify-between items-baseline">
-              <span className="font-semibold" style={{ color: theme.primaryColor }}>
-                {exp.position}
-              </span>
-              <span style={{ color: theme.secondaryColor, fontSize: fontSize.small }}>
+              <div>
+                <span className="font-semibold" style={{ color: theme.primaryColor }}>
+                  {exp.company}
+                </span>
+                {exp.position && (
+                  <span style={{ color: theme.secondaryColor, marginLeft: '8px' }}>
+                    {exp.position}
+                  </span>
+                )}
+              </div>
+              <span style={{ color: theme.secondaryColor, fontSize: fontSize.small, flexShrink: 0 }}>
                 {exp.startDate} - {exp.current ? '至今' : exp.endDate}
               </span>
             </div>
-            <p style={{ color: theme.secondaryColor, fontSize: fontSize.small }}>{exp.company}</p>
             {exp.description && (
               <p className="mt-1 whitespace-pre-line leading-snug" style={{ fontSize: fontSize.small }}>
                 {exp.description}
