@@ -340,6 +340,16 @@ function TemplateModal({
   onClose: () => void;
   onCreate: (themeId?: string) => void;
 }) {
+  const [filter, setFilter] = useState<'all' | 'single' | 'double'>('all');
+  
+  const filteredThemes = presetThemes.filter((theme) => {
+    if (filter === 'all') return true;
+    return theme.layout === filter;
+  });
+
+  const singleCount = presetThemes.filter((t) => t.layout === 'single').length;
+  const doubleCount = presetThemes.filter((t) => t.layout === 'double').length;
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -352,58 +362,114 @@ function TemplateModal({
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[80vh] overflow-hidden"
+        className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[85vh] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-6 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-bold">选择模板</h2>
-            <p className="text-sm text-gray-500 mt-1">选择一个风格开始，之后可以随时更改</p>
+        <div className="p-6 border-b border-gray-200 dark:border-gray-800">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-xl font-bold">选择模板</h2>
+              <p className="text-sm text-gray-500 mt-1">{presetThemes.length} 款精选模板，之后可随时更改</p>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          
+          {/* Filter Tabs */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setFilter('all')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                filter === 'all'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
+            >
+              全部 ({presetThemes.length})
+            </button>
+            <button
+              onClick={() => setFilter('single')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                filter === 'single'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
+            >
+              单栏 ({singleCount})
+            </button>
+            <button
+              onClick={() => setFilter('double')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                filter === 'double'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
+            >
+              双栏 ({doubleCount})
+            </button>
+          </div>
         </div>
 
         <div className="p-6 overflow-y-auto max-h-[60vh]">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {presetThemes.map((theme) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {filteredThemes.map((theme) => (
               <motion.button
                 key={theme.id}
                 onClick={() => onCreate(theme.id)}
-                className="group relative rounded-xl border-2 border-gray-200 dark:border-gray-700 overflow-hidden hover:border-blue-500 transition-colors"
+                className="group relative rounded-xl border-2 border-gray-200 dark:border-gray-700 overflow-hidden hover:border-blue-500 transition-all hover:shadow-lg"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
+                layout
               >
                 <div
-                  className="aspect-[210/297] p-4 flex flex-col items-center justify-center"
+                  className="aspect-[210/297] p-3 flex flex-col items-center justify-center relative"
                   style={{ backgroundColor: theme.backgroundColor }}
                 >
+                  {/* Layout badge */}
+                  <div className="absolute top-2 right-2">
+                    <span 
+                      className="text-xs px-1.5 py-0.5 rounded"
+                      style={{ 
+                        backgroundColor: theme.primaryColor + '20',
+                        color: theme.primaryColor,
+                      }}
+                    >
+                      {theme.layout === 'double' ? '双栏' : '单栏'}
+                    </span>
+                  </div>
+                  
+                  {/* Preview content */}
                   <div
-                    className="text-lg font-bold mb-1"
+                    className="w-6 h-6 rounded-full mb-2"
+                    style={{ backgroundColor: theme.primaryColor + '30' }}
+                  />
+                  <div
+                    className="text-sm font-bold mb-0.5"
                     style={{ color: theme.primaryColor }}
                   >
                     张三
                   </div>
                   <div
-                    className="text-sm"
+                    className="text-xs"
                     style={{ color: theme.secondaryColor }}
                   >
                     前端工程师
                   </div>
-                  <div className="mt-4 flex gap-1">
-                    <div className="w-8 h-1 rounded" style={{ backgroundColor: theme.primaryColor }} />
-                    <div className="w-4 h-1 rounded" style={{ backgroundColor: theme.secondaryColor }} />
+                  <div className="mt-3 w-full px-2 space-y-1">
+                    <div className="h-0.5 rounded" style={{ backgroundColor: theme.primaryColor + '40' }} />
+                    <div className="h-0.5 w-3/4 rounded" style={{ backgroundColor: theme.secondaryColor + '40' }} />
+                    <div className="h-0.5 w-1/2 rounded" style={{ backgroundColor: theme.secondaryColor + '30' }} />
                   </div>
                 </div>
-                <div className="p-3 bg-gray-50 dark:bg-gray-800 text-center">
-                  <span className="font-medium">{theme.name}</span>
+                <div className="p-2 bg-gray-50 dark:bg-gray-800 text-center">
+                  <span className="text-sm font-medium">{theme.name}</span>
                 </div>
                 {/* Hover overlay */}
-                <div className="absolute inset-0 bg-blue-600/90 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <div className="absolute inset-0 bg-gradient-to-t from-blue-600 to-blue-500 opacity-0 group-hover:opacity-95 transition-opacity flex items-center justify-center">
                   <span className="text-white font-semibold">使用此模板</span>
                 </div>
               </motion.button>
