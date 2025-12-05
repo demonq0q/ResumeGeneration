@@ -74,12 +74,12 @@ export function EditorPanel() {
   return (
     <div className="h-full flex flex-col">
       {/* Tab Navigation */}
-      <div className="p-4 border-b border-gray-100 dark:border-gray-700/50">
-        <div className="flex items-center gap-2 mb-3">
+      <div className="p-3 sm:p-4 border-b border-gray-100 dark:border-gray-700/50">
+        <div className="flex items-center gap-2 mb-2 sm:mb-3">
           <Sparkles className="w-4 h-4 text-blue-500" />
           <span className="text-sm font-medium text-gray-500">编辑区块</span>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5 sm:gap-2">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -89,7 +89,7 @@ export function EditorPanel() {
               <motion.button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`relative flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
+                className={`relative flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all ${
                   isActive
                     ? `${colorMap[tab.color]} ring-2 ring-current/20`
                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50'
@@ -97,12 +97,12 @@ export function EditorPanel() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <Icon className="w-4 h-4" />
-                <span>{tab.label}</span>
+                <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden xs:inline sm:inline">{tab.label}</span>
                 {tab.id !== 'theme' && (
                   <button
                     onClick={(e) => toggleVisibility(tab.id, e)}
-                    className={`ml-1 p-0.5 rounded transition-colors ${
+                    className={`ml-0.5 sm:ml-1 p-0.5 rounded transition-colors hidden sm:block ${
                       isVisible
                         ? 'text-green-500 hover:bg-green-100 dark:hover:bg-green-900/30'
                         : 'text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
@@ -127,7 +127,7 @@ export function EditorPanel() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -10 }}
             transition={{ duration: 0.15 }}
-            className="p-4"
+            className="p-3 sm:p-4"
           >
             <ActiveComponent />
           </motion.div>
@@ -135,7 +135,7 @@ export function EditorPanel() {
       </div>
 
       {/* Section Sorter */}
-      <div className="p-4 border-t border-gray-100 dark:border-gray-700/50">
+      <div className="p-3 sm:p-4 border-t border-gray-100 dark:border-gray-700/50">
         <SectionSorter />
       </div>
     </div>
