@@ -6,8 +6,11 @@ import { ThemeProvider } from '@/components/theme/ThemeProvider';
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
-  title: '简历编辑器 - 在线制作专业简历',
+  title: '简历工坊 - 在线制作专业简历',
   description: '免费在线简历编辑器，支持实时预览、自定义主题、PDF导出',
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({
