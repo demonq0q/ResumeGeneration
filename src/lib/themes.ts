@@ -1,0 +1,61 @@
+import { ThemeConfig } from '@/types/resume';
+
+export const presetThemes: ThemeConfig[] = [
+  {
+    id: 'classic',
+    name: '经典',
+    primaryColor: '#1a1a1a',
+    secondaryColor: '#4a4a4a',
+    backgroundColor: '#ffffff',
+    textColor: '#333333',
+    fontFamily: 'serif',
+    fontSize: 'medium',
+    layout: 'single',
+  },
+  {
+    id: 'modern',
+    name: '现代',
+    primaryColor: '#3b82f6',
+    secondaryColor: '#60a5fa',
+    backgroundColor: '#ffffff',
+    textColor: '#1f2937',
+    fontFamily: 'sans',
+    fontSize: 'medium',
+    layout: 'single',
+  },
+  {
+    id: 'creative',
+    name: '创意',
+    primaryColor: '#8b5cf6',
+    secondaryColor: '#a78bfa',
+    backgroundColor: '#faf5ff',
+    textColor: '#1f2937',
+    fontFamily: 'sans',
+    fontSize: 'medium',
+    layout: 'double',
+  },
+  {
+    id: 'minimal',
+    name: '简约',
+    primaryColor: '#64748b',
+    secondaryColor: '#94a3b8',
+    backgroundColor: '#ffffff',
+    textColor: '#475569',
+    fontFamily: 'sans',
+    fontSize: 'small',
+    layout: 'single',
+  },
+  {
+    id: 'professional',
+    name: '专业',
+    primaryColor: '#0f766e',
+    secondaryColor: '#14b8a6',
+    backgroundColor: '#ffffff',
+    textColor: '#1f2937',
+    fontFamily: 'sans',
+    fontSize: 'medium',
+    layout: 'single',
+  },
+];
+
+export const defaultTheme = presetThemes[1]; // modern

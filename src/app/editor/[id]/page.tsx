@@ -1,0 +1,265 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useResumeStore } from '@/store/resumeStore';
+import { useAutoSave } from '@/hooks/useAutoSave';
+import { getResume } from '@/lib/db';
+import { exportToPDF } from '@/lib/pdf';
+import { EditorPanel } from '@/components/editor/EditorPanel';
+import { ResumePreview } from '@/components/preview/ResumePreview';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { SaveStatus } from '@/components/ui/SaveStatus';
+import {
+  ArrowLeft,
+  Download,
+  Eye,
+  Edit3,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
+  FileText,
+  Loader2,
+  Check,
+} from 'lucide-react';
+
+export default function EditorPage() {
+  const params = useParams();
+  const router = useRouter();
+  const id = params.id as string;
+
+  const resume = useResumeStore((state) => state.resume);
+  const setResume = useResumeStore((state) => state.setResume);
+  const saveStatus = useAutoSave();
+
+  const previewRef = useRef<HTMLDivElement>(null);
+  const [loading, setLoading] = useState(true);
+  const [view, setView] = useState<'split' | 'editor' | 'preview'>('split');
+  const [exporting, setExporting] = useState(false);
+  const [exportSuccess, setExportSuccess] = useState(false);
+  const [zoom, setZoom] = useState(100);
+
+  useEffect(() => {
+    loadResume();
+  }, [id]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+        e.preventDefault();
+        handleExport();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [resume]);
+
+  const loadResume = async () => {
+    try {
+      const data = await getResume(id);
+      if (data) {
+        setResume(data);
+      } else {
+        router.push('/');
+      }
+    } catch (error) {
+      console.error('Failed to load resume:', error);
+      router.push('/');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExport = async () => {
+    if (!previewRef.current || !resume) return;
+
+    setExporting(true);
+    setExportSuccess(false);
+    try {
+      const filename = `${resume.personal.name || resume.name || '简历'}.pdf`;
+      await exportToPDF(previewRef.current, filename);
+      setExportSuccess(true);
+      setTimeout(() => setExportSuccess(false), 2000);
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('导出失败，请重试');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleZoom = (delta: number) => {
+    setZoom((prev) => Math.min(150, Math.max(50, prev + delta)));
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+          <span className="text-gray-500">加载中...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!resume) return null;
+
+  return (
+    <div className="h-screen flex flex-col bg-gray-100 dark:bg-gray-900">
+      {/* Header */}
+      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between no-print z-10">
+        <div className="flex items-center gap-4">
+          <motion.button
+            onClick={() => router.push('/')}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-600 dark:text-gray-300"
+            whileHover={{ x: -2 }}
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-sm">返回</span>
+          </motion.button>
+          
+          <div className="h-6 w-px bg-gray-200 dark:bg-gray-700" />
+          
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+              <FileText className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <h1 className="font-semibold text-sm">{resume.name}</h1>
+              <SaveStatus status={saveStatus} />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {/* View Toggle */}
+          <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+            {[
+              { id: 'editor', icon: Edit3, label: '编辑' },
+              { id: 'split', icon: () => (
+                <div className="w-4 h-4 flex gap-0.5">
+                  <div className="flex-1 bg-current rounded-sm" />
+                  <div className="flex-1 bg-current rounded-sm opacity-40" />
+                </div>
+              ), label: '分屏' },
+              { id: 'preview', icon: Eye, label: '预览' },
+            ].map(({ id, icon: Icon, label }) => (
+              <button
+                key={id}
+                onClick={() => setView(id as typeof view)}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-1.5 ${
+                  view === id
+                    ? 'bg-white dark:bg-gray-600 shadow-sm text-blue-600 dark:text-blue-400'
+                    : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                <span className="hidden sm:inline">{label}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="h-6 w-px bg-gray-200 dark:bg-gray-700" />
+
+          <ThemeToggle />
+
+          <motion.button
+            onClick={handleExport}
+            disabled={exporting}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+              exportSuccess
+                ? 'bg-green-500 text-white'
+                : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg hover:shadow-blue-500/25'
+            }`}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            {exporting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : exportSuccess ? (
+              <Check className="w-4 h-4" />
+            ) : (
+              <Download className="w-4 h-4" />
+            )}
+            <span className="hidden sm:inline">
+              {exportSuccess ? '已下载' : '导出 PDF'}
+            </span>
+          </motion.button>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Editor Panel */}
+        <AnimatePresence mode="wait">
+          {(view === 'split' || view === 'editor') && (
+            <motion.div
+              key="editor"
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: view === 'split' ? '45%' : '100%', opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-hidden no-print flex flex-col"
+            >
+              <EditorPanel />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Preview Panel */}
+        <AnimatePresence mode="wait">
+          {(view === 'split' || view === 'preview') && (
+            <motion.div
+              key="preview"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="flex-1 flex flex-col bg-gray-200 dark:bg-gray-900 overflow-hidden"
+            >
+              {/* Zoom Controls */}
+              <div className="flex items-center justify-center gap-2 py-3 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                <button
+                  onClick={() => handleZoom(-10)}
+                  className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  disabled={zoom <= 50}
+                >
+                  <ZoomOut className="w-4 h-4" />
+                </button>
+                <span className="text-sm font-medium w-14 text-center">{zoom}%</span>
+                <button
+                  onClick={() => handleZoom(10)}
+                  className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  disabled={zoom >= 150}
+                >
+                  <ZoomIn className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setZoom(100)}
+                  className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors ml-2"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Preview Area */}
+              <div className="flex-1 overflow-auto p-8">
+                <div
+                  className="transition-transform duration-200 origin-top"
+                  style={{ transform: `scale(${zoom / 100})` }}
+                >
+                  <ResumePreview ref={previewRef} resume={resume} />
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
